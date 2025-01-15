@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id              String        @id @default(uuid()) @db.VarChar(36)
+    name            String        @db.VarChar(50)
+    lastname        String        @db.VarChar(50)
+    email           String        @unique @db.VarChar(100)
+    password        String        @db.VarChar(64)
+    departmentEmail String?       @db.VarChar(100)
+    createdAt       DateTime      @default(now())
+    deleted         Boolean       @default(false)
+    deletedAt       DateTime?     @db.DateTime()
+    Interests       Interest[]
+    Applications    Application[]
+    Projects        Project[]
+}
+
+model Tag {
+    id           Int          @id @default(autoincrement())
+    name         String       @db.VarChar(20)
+    Interests    Interest[]
+    ProjectTags  ProjectTag[]
+    Technologies Technology[]
+}
+
+model Expertise {
+    id           Int          @id @default(autoincrement())
+    name         String       @db.VarChar(20)
+    Technologies Technology[]
+}
+
+model Interest {
+    id     String @id @default(uuid()) @db.VarChar(36)
+    User   User   @relation(fields: [userId], references: [id])
+    userId String @db.VarChar(36)
+    Tag    Tag    @relation(fields: [tagId], references: [id])
+    tagId  Int
+}
+
+model Project {
+    id                  String        @id @default(uuid()) @db.VarChar(36)
+    name                String        @db.VarChar(50)
+    abstract            String        @db.VarChar(1000)
+    description         String        @db.VarChar(3000)
+    applicationsAllowed Boolean       @default(true)
+    createdAt           DateTime      @default(now())
+    deleted             Boolean       @default(false)
+    deletedAt           DateTime      @default(now())
+    User                User          @relation(fields: [userId], references: [id])
+    userId              String        @db.VarChar(36)
+    ProjectTags         ProjectTag[]
+    Technologies        Technology[]
+    Positions           Position[]
+    Applications        Application[]
+}
+
+model Technology {
+    id          Int       @id @default(autoincrement())
+    Project     Project   @relation(fields: [projectId], references: [id])
+    projectId   String    @db.VarChar(36)
+    Tag         Tag       @relation(fields: [tagId], references: [id])
+    tagId       Int
+    Expertise   Expertise @relation(fields: [expertiseId], references: [id])
+    expertiseId Int
+}
+
+model Position {
+    id           String        @id @default(uuid()) @db.VarChar(36)
+    name         String        @db.VarChar(100)
+    description  String        @db.VarChar(2000)
+    amount       Int           @db.UnsignedTinyInt
+    Project      Project       @relation(fields: [projectId], references: [id])
+    projectId    String        @db.VarChar(36)
+    Applications Application[]
+}
+
+model Application {
+    id         String   @id @default(uuid()) @db.VarChar(36)
+    motivation String   @db.VarChar(2000)
+    cvRoute    String   @db.VarChar(200)
+    result     Boolean?
+    createdAt  DateTime @default(now())
+    Position   Position @relation(fields: [positionId], references: [id])
+    positionId String   @db.VarChar(36)
+    Project    Project  @relation(fields: [projectId], references: [id])
+    projectId  String   @db.VarChar(36)
+    User       User     @relation(fields: [userId], references: [id])
+    userId     String   @db.VarChar(36)
+}
+
+model ProjectTag {
+    id        String  @id @default(uuid()) @db.VarChar(36)
+    Project   Project @relation(fields: [projectId], references: [id])
+    projectId String  @db.VarChar(36)
+    Tag       Tag     @relation(fields: [tagId], references: [id])
+    tagId     Int
+}
